@@ -6,7 +6,6 @@ import Image from "next/image";
 import { Trash2, Plus, Minus } from "lucide-react";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
-import authService from "@/services/auth.service";
 import { cartService } from "@/services/cart.service";
 
  const toNumber = (value: unknown, fallback = 0) => {
@@ -100,7 +99,7 @@ export default function CartPage() {
         <div className="flex items-center justify-between gap-4 mb-6">
           <h1 className="text-2xl md:text-3xl font-bold">Giỏ hàng</h1>
           <Link
-            href="/"
+            href="/product"
             className="text-sm font-medium text-red-600 hover:text-red-700"
           >
             Tiếp tục mua sắm

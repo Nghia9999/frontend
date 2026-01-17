@@ -22,7 +22,7 @@ type Props = {
 export default function ProductCard({ product, showAddToCart = true }: Props) {
   const [openModal, setOpenModal] = useState(false);
 
-  const ratingValue = typeof product.rating === 'number' ? product.rating : 0;
+  const ratingValue = typeof product.rating === 'number' ? product.rating : 4.5;
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();

@@ -7,7 +7,6 @@ import Header from "@/components/Header";
 import productService from "@/services/product.service";
 import categoryService from "@/services/category.service";
 import { useTracking } from "@/hooks/useTracking";
-import TrackingWrapper from "@/components/TrackingWrapper";
 import authService from "@/services/auth.service";
 import { cartService } from "@/services/cart.service";
 import ProductRecommendations from "@/components/ProductRecommendations";
@@ -24,7 +23,7 @@ export default function ProductDetailPage() {
   const currentUser = authService.getCurrentUser();
   const userId = currentUser?.userId;
 
-  const { trackView, trackClick, trackAddToCart } = useTracking({
+  const { trackView, trackAddToCart } = useTracking({
     userId,
     autoTrack: false
   });

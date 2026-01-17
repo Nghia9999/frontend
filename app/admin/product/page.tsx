@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { productService } from "@/services/product.service";
 import categoryService from "@/services/category.service";
 import api from "@/services/api";
+import { Search } from "lucide-react";
 
 /* =======================
    TYPES
@@ -56,6 +57,13 @@ export default function ProductAdminPage() {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
 
+  // Pagination and filter states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const productsPerPage = 10;
+
   const [form, setForm] = useState<Product>({
     name: "",
     price: 0,
@@ -69,7 +77,7 @@ export default function ProductAdminPage() {
   useEffect(() => {
     fetchProducts();
     fetchCategories();
-  }, []);
+  }, [currentPage, searchTerm, selectedCategory]);
 
   /* =======================
      FETCH
@@ -77,8 +85,24 @@ export default function ProductAdminPage() {
   async function fetchProducts() {
     setLoading(true);
     try {
-      const data = await productService.getAll({});
+      const query: any = {
+        limit: productsPerPage,
+        skip: (currentPage - 1) * productsPerPage,
+      };
+      
+      if (searchTerm) query.search = searchTerm;
+      if (selectedCategory) query.category = selectedCategory;
+      
+      const data = await productService.getAll(query);
       setProducts(data || []);
+      
+      // Fetch total count for pagination
+      const countQuery: any = {};
+      if (searchTerm) countQuery.search = searchTerm;
+      if (selectedCategory) countQuery.category = selectedCategory;
+      
+      const countData = await productService.count(countQuery);
+      setTotalProducts(countData.count || 0);
     } finally {
       setLoading(false);
     }
@@ -194,6 +218,54 @@ export default function ProductAdminPage() {
         </button>
       </div>
 
+      {/* SEARCH AND FILTER */}
+      <div className="bg-white rounded-xl shadow-sm border p-4">
+        <div className="flex gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <input
+              type="text"
+              placeholder="Tìm kiếm sản phẩm..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1); // Reset to first page when searching
+              }}
+              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+            />
+          </div>
+          <div className="w-64">
+            <select
+              value={selectedCategory}
+              onChange={(e) => {
+                setSelectedCategory(e.target.value);
+                setCurrentPage(1); // Reset to first page when filtering
+              }}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+            >
+              <option value="">Tất cả danh mục</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {"  ".repeat(cat.level) + (cat.level > 0 ? "└ " : "") + cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          {(searchTerm || selectedCategory) && (
+            <button
+              onClick={() => {
+                setSearchTerm("");
+                setSelectedCategory("");
+                setCurrentPage(1);
+              }}
+              className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+            >
+              Xóa bộ lọc
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* TABLE */}
       <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
         <table className="w-full text-sm">
@@ -277,6 +349,62 @@ export default function ProductAdminPage() {
           </tbody>
         </table>
       </div>
+
+      {/* PAGINATION */}
+      {totalProducts > productsPerPage && (
+        <div className="bg-white rounded-xl shadow-sm border p-4">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-600">
+              Hiển thị {(currentPage - 1) * productsPerPage + 1} đến{" "}
+              {Math.min(currentPage * productsPerPage, totalProducts)} của{" "}
+              {totalProducts} sản phẩm
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 text-sm border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                Trang trước
+              </button>
+              
+              {/* Page numbers */}
+              {Array.from({ length: Math.ceil(totalProducts / productsPerPage) }, (_, i) => i + 1)
+                .filter(
+                  (page) =>
+                    page === 1 ||
+                    page === Math.ceil(totalProducts / productsPerPage) ||
+                    Math.abs(page - currentPage) <= 2
+                )
+                .map((page, index, array) => (
+                  <React.Fragment key={page}>
+                    {index > 0 && array[index - 1] !== page - 1 && (
+                      <span className="px-2 text-gray-400">...</span>
+                    )}
+                    <button
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-1 text-sm border rounded ${
+                        currentPage === page
+                          ? "bg-red-500 text-white border-red-500"
+                          : "hover:bg-gray-50"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  </React.Fragment>
+                ))}
+              
+              <button
+                onClick={() => setCurrentPage(Math.min(Math.ceil(totalProducts / productsPerPage), currentPage + 1))}
+                disabled={currentPage === Math.ceil(totalProducts / productsPerPage)}
+                className="px-3 py-1 text-sm border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                Trang sau
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL */}
       {showModal && (

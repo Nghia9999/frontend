@@ -30,7 +30,7 @@ export default function AdminHeader() {
 
   return (
     <header className="h-16 bg-white border-b border-zinc-200 px-6 flex items-center justify-between">
-      <h1 className="font-semibold text-lg text-zinc-900">Dashboard</h1>
+      <h1 className="font-semibold text-lg text-zinc-900">Admin</h1>
 
       <div className="flex items-center gap-4">
         {/* Notification */}

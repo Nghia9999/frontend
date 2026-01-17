@@ -2,11 +2,16 @@ import CategorySlider from "@/components/CategorySlider";
 import Hero from "@/components/Hero";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import RecommendSection from "@/components/RecommendSection";
+
 export default function Page() {
   return (
     <main>
       <Header />
       <Hero />
+
+      <RecommendSection />
+
       {/* <CategorySection /> */}
       <CategorySlider title="Thời trang nam" categorySlug="nam" />
 

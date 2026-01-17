@@ -13,8 +13,8 @@ const menu = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { label: "Sản phẩm", href: "/admin/product", icon: Package },
   { label: "Danh mục", href: "/admin/categories", icon: Layers },
-  { label: "Đơn hàng", href: "/admin/orders", icon: ShoppingCart },
-  { label: "Người dùng", href: "/admin/users", icon: Users },
+  { label: "Đơn hàng", href: "/admin/order", icon: ShoppingCart },
+  { label: "Người dùng", href: "/admin/user", icon: Users },
 ];
 
 export default function AdminSidebar() {

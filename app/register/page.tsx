@@ -21,7 +21,6 @@ export default function RegisterPage() {
     try {
       await authService.register({ name, email, password });
       
-      // Sau khi đăng ký thành công, chuyển về trang login
       router.push("/login");
     } catch (err: any) {
       setError(

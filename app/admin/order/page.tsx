@@ -2,8 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import orderService, { OrderDto } from "@/services/order.service";
-import Footer from "@/components/Footer";
-import Header from "@/components/Header";
+
 
 export default function OrderAdminPage() {
   const [orders, setOrders] = useState<OrderDto[]>([]);
@@ -64,21 +63,21 @@ export default function OrderAdminPage() {
   if (loading) {
     return (
       <main>
-        <Header />
+        
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
             <p className="text-gray-600">Đang tải đơn hàng...</p>
           </div>
         </div>
-        <Footer />
+        
       </main>
     );
   }
 
   return (
     <main>
-      <Header />
+      
       
       <div className="max-w-7xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">Quản lý đơn hàng</h1>
@@ -189,7 +188,7 @@ export default function OrderAdminPage() {
         </div>
       </div>
       
-      <Footer />
+      
     </main>
   );
 }

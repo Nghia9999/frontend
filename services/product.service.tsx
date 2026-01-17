@@ -4,6 +4,7 @@ export type ProductQuery = {
   category?: string;
   limit?: number;
   skip?: number;
+  search?: string;
 };
 
 export const productService = {
@@ -12,6 +13,7 @@ export const productService = {
     if (q.category) params.category = q.category;
     if (typeof q.limit !== "undefined") params.limit = q.limit;
     if (typeof q.skip !== "undefined") params.skip = q.skip;
+    if (q.search) params.search = q.search;
     const res = await api.get("/product", { params });
     return res.data;
   },
@@ -33,6 +35,14 @@ export const productService = {
 
   async remove(id: string) {
     const res = await api.delete(`/product/${id}`);
+    return res.data;
+  },
+
+  async count(q: Omit<ProductQuery, 'limit' | 'skip'> = {}) {
+    const params: any = {};
+    if (q.category) params.category = q.category;
+    if (q.search) params.search = q.search;
+    const res = await api.get("/product/count", { params });
     return res.data;
   },
 };
