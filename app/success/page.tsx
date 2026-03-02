@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 
-export default function SuccessPage() {
+function SuccessPageContent() {
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [orderInfo, setOrderInfo] = useState<any>(null);
@@ -74,5 +74,13 @@ export default function SuccessPage() {
       
       <Footer />
     </main>
+  );
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={<div>Đang tải...</div>}>
+      <SuccessPageContent />
+    </Suspense>
   );
 }

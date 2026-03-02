@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
@@ -10,7 +10,7 @@ import { Product } from "@/components/ProductCard";
 import categoryService from "@/services/category.service";
 import productService from "@/services/product.service";
 
-export default function ProductPage() {
+function ProductPageContent() {
   const searchParams = useSearchParams();
   const [categories, setCategories] = useState<Category[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
@@ -147,6 +147,14 @@ export default function ProductPage() {
 
       <Footer />
     </main>
+  );
+}
+
+export default function ProductPage() {
+  return (
+    <Suspense fallback={<div>Đang tải...</div>}>
+      <ProductPageContent />
+    </Suspense>
   );
 }
 
