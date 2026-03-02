@@ -21,6 +21,13 @@ import { useCart } from "@/hooks/useCart";
 export default function CartPage() {
   const { cartItems: cart, loading, updateQuantity, removeFromCart, clearCart } = useCart();
 
+  const handleUpdateQuantity = (itemId: string, delta: number) => {
+    const item = cart.find((c) => c._id === itemId);
+    if (item) {
+      const newQuantity = Math.max(1, toNumber(item.quantity, 1) + delta);
+      updateQuantity(itemId, newQuantity);
+    }
+  };
 
   const totalPrice = cart.reduce((sum, item) => {
     const price = toNumber(item?.price, 0);
