@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import Link from "next/link";
 import { Search, User, ShoppingCart, Menu, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import authService from "@/services/auth.service";
+import { useCart } from "@/hooks/useCart";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -14,6 +15,7 @@ export default function Header() {
   const [showProfile, setShowProfile] = useState(false);
   const searchRef = useRef<HTMLInputElement | null>(null);
   const router = useRouter();
+  const { cartCount } = useCart();
 
   return (
     <header className="sticky top-0 z-50">
@@ -72,14 +74,6 @@ export default function Header() {
 
             <li>
               <Link
-                href="#"
-                className="px-4 py-2 rounded-full text-white hover:bg-white hover:text-black transition font-bold"
-              >
-                Dành cho bạn ✨
-              </Link>
-            </li>
-            <li>
-              <Link
                 href="#contact"
                 className="px-4 py-2 rounded-full text-white hover:bg-white hover:text-black transition font-bold"
               >
@@ -103,15 +97,17 @@ export default function Header() {
 
           <Link href="/cart" className="p-2 rounded-lg hover:bg-white hover:text-black transition relative">
             <ShoppingCart size={24} />
-            <span
-              className="absolute -top-1 -right-1 min-w-5 h-5
+            {cartCount > 0 && (
+              <span
+                className="absolute -top-1 -right-1 min-w-5 h-5
               px-1 text-xs font-bold
             bg-white text-black
               rounded-full
               flex items-center justify-center"
-            >
-              3
-            </span>
+              >
+                {cartCount}
+              </span>
+            )}
           </Link>
 
           <div className="hidden sm:block relative">
@@ -199,15 +195,6 @@ export default function Header() {
               )}
             </li>
 
-            <li>
-              <Link
-                href="#"
-                onClick={() => setIsMenuOpen(false)}
-                className="block px-4 py-2 rounded-lg hover:bg-white hover:text-black transition font-bold"
-              >
-                Dành cho bạn ✨
-              </Link>
-            </li>
           </ul>
         </div>
       )}

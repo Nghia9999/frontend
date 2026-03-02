@@ -17,6 +17,8 @@ export default function ProductPage() {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [sort, setSort] = useState<string>("default");
+  const [minPrice, setMinPrice] = useState<number>(0);
+  const [maxPrice, setMaxPrice] = useState<number>(1000000);
 
   // Handle URL parameters
   useEffect(() => {
@@ -70,30 +72,44 @@ export default function ProductPage() {
     })();
   }, []);
 
-  // Filter products based on selected category
+  // Filter products based on selected category and price range
   const filtered = useMemo(() => {
-    if (!selectedCategory) return allProducts;
-    
-    // Find category by slug
-    const findCategoryBySlug = (categories: Category[], slug: string): Category | null => {
-      for (const category of categories) {
-        if (category.slug === slug) return category;
-        if (category.children) {
-          const found = findCategoryBySlug(category.children, slug);
-          if (found) return found;
+    let result = allProducts;
+
+    // Filter by category
+    if (selectedCategory) {
+      const findCategoryBySlug = (categories: Category[], slug: string): Category | null => {
+        for (const category of categories) {
+          if (category.slug === slug) return category;
+          if (category.children) {
+            const found = findCategoryBySlug(category.children, slug);
+            if (found) return found;
+          }
         }
+        return null;
+      };
+      
+      const category = findCategoryBySlug(categories, selectedCategory);
+      if (category) {
+        const ids = collectDescendants(categories, category.id);
+        result = result.filter(
+          (p: any) => p.category && ids.includes(p.category)
+        );
       }
-      return null;
-    };
-    
-    const category = findCategoryBySlug(categories, selectedCategory);
-    if (!category) return allProducts;
-    
-    const ids = collectDescendants(categories, category.id);
-    return allProducts.filter(
-      (p: any) => p.category && ids.includes(p.category)
-    );
-  }, [allProducts, selectedCategory, categories]);
+    }
+
+    // Filter by price
+    if (minPrice > 0 || maxPrice < 1000000) {
+      result = result.filter((p: any) => {
+        const price = p.price || 0;
+        if (price < minPrice) return false;
+        if (price > maxPrice) return false;
+        return true;
+      });
+    }
+
+    return result;
+  }, [allProducts, selectedCategory, categories, minPrice, maxPrice]);
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -108,6 +124,10 @@ export default function ProductPage() {
               categories={categories}
               onSelect={setSelectedCategory}
               selectedSlug={selectedCategory}
+              onPriceChange={(min, max) => {
+                setMinPrice(min || 0);
+                setMaxPrice(max || 1000000);
+              }}
             />
           </div>
 

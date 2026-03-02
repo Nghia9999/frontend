@@ -14,11 +14,15 @@ type Props = {
   categories: Category[];
   onSelect: (slug: string | null) => void;
   selectedSlug?: string | null;
+  onPriceChange?: (minPrice: number, maxPrice: number) => void;
 };
 
-export default function ProductFilters({ categories, onSelect, selectedSlug }: Props) {
+export default function ProductFilters({ categories, onSelect, selectedSlug, onPriceChange }: Props) {
   // đường dẫn đang mở: ["nu", "ao", "ao-thun"]
   const [openPath, setOpenPath] = React.useState<string[]>([]);
+  const [minPrice, setMinPrice] = React.useState<number>(0);
+  const [maxPrice, setMaxPrice] = React.useState<number>(1000000);
+  const MAX_PRICE = 1000000;
 
   function toggle(level: number, id: string, slug: string) {
     const next = openPath.slice(0, level);
@@ -35,11 +39,32 @@ export default function ProductFilters({ categories, onSelect, selectedSlug }: P
   function clear() {
     setOpenPath([]);
     onSelect(null);
+    setMinPrice(0);
+    setMaxPrice(MAX_PRICE);
+    onPriceChange?.(0, MAX_PRICE);
   }
 
+  const handleMinPriceSlider = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value);
+    if (value <= maxPrice) {
+      setMinPrice(value);
+      onPriceChange?.(value, maxPrice);
+    }
+  };
+
+  const handleMaxPriceSlider = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value);
+    if (value >= minPrice) {
+      setMaxPrice(value);
+      onPriceChange?.(minPrice, value);
+    }
+  };
+
   return (
-    <aside className="bg-white rounded-xl shadow p-4 w-full max-w-xs">
-      {/* Header */}
+  <aside className="w-full max-w-xs space-y-6">
+
+    {/* ================= DANH MỤC ================= */}
+    <div className="bg-white rounded-xl shadow p-4">
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-semibold text-sm uppercase text-gray-700">
           Bộ lọc danh mục
@@ -52,7 +77,6 @@ export default function ProductFilters({ categories, onSelect, selectedSlug }: P
         </button>
       </div>
 
-      {/* LEVEL 0 */}
       <ul className="space-y-1 text-sm">
         {categories.map((cat0) => {
           const open0 = openPath[0] === cat0.id;
@@ -61,7 +85,7 @@ export default function ProductFilters({ categories, onSelect, selectedSlug }: P
           return (
             <li key={cat0.id}>
               <button
-                onClick={() => toggle(0, cat0.id, cat0.slug || '')}
+                onClick={() => toggle(0, cat0.id, cat0.slug || "")}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg
                   ${
                     isSelected || open0
@@ -71,27 +95,21 @@ export default function ProductFilters({ categories, onSelect, selectedSlug }: P
               >
                 {cat0.name}
                 {cat0.children &&
-                  (open0 ? (
-                    <ChevronDown size={16} />
-                  ) : (
-                    <ChevronRight size={16} />
-                  ))}
+                  (open0 ? <ChevronDown size={16} /> : <ChevronRight size={16} />)}
               </button>
 
-              {/* LEVEL 1 */}
               {open0 && cat0.children && (
                 <ul className="mt-1 ml-4 space-y-1">
                   {cat0.children.map((cat1) => {
                     const open1 = openPath[1] === cat1.id;
-                    const isSelected = selectedSlug === cat1.slug;
 
                     return (
                       <li key={cat1.id}>
                         <button
-                          onClick={() => toggle(1, cat1.id, cat1.slug || '')}
+                          onClick={() => toggle(1, cat1.id, cat1.slug || "")}
                           className={`w-full flex items-center justify-between px-3 py-2 rounded-lg
                             ${
-                              isSelected || open1
+                              selectedSlug === cat1.slug || open1
                                 ? "bg-red-50 text-red-600 font-medium"
                                 : "hover:bg-gray-100"
                             }`}
@@ -105,13 +123,14 @@ export default function ProductFilters({ categories, onSelect, selectedSlug }: P
                             ))}
                         </button>
 
-                        {/* LEVEL 2 */}
                         {open1 && cat1.children && (
                           <ul className="mt-1 ml-4 space-y-1">
                             {cat1.children.map((cat2) => (
                               <li key={cat2.id}>
                                 <button
-                                  onClick={() => toggle(2, cat2.id, cat2.slug || '')}
+                                  onClick={() =>
+                                    toggle(2, cat2.id, cat2.slug || "")
+                                  }
                                   className={`w-full text-left px-3 py-2 rounded-lg
                                     ${
                                       selectedSlug === cat2.slug
@@ -134,6 +153,51 @@ export default function ProductFilters({ categories, onSelect, selectedSlug }: P
           );
         })}
       </ul>
-    </aside>
+    </div>
+
+    {/* ================= MỨC GIÁ ================= */}
+    <div className="bg-white rounded-xl shadow p-4">
+      <h3 className="font-semibold text-sm uppercase text-gray-700 mb-4">
+        Mức giá
+      </h3>
+
+      <div className="mb-4 p-3 bg-red-50 rounded-lg text-center">
+        <p className="text-sm font-semibold text-gray-800">
+          {minPrice.toLocaleString("vi-VN")}đ -{" "}
+          {maxPrice.toLocaleString("vi-VN")}đ
+        </p>
+      </div>
+
+      <div className="mb-4">
+        <label className="text-xs text-gray-600 block mb-2">
+          Giá tối thiểu
+        </label>
+        <input
+          type="range"
+          min="0"
+          max={MAX_PRICE}
+          step="1000"
+          value={minPrice}
+          onChange={handleMinPriceSlider}
+          className="w-full accent-red-500 cursor-pointer"
+        />
+      </div>
+
+      <div>
+        <label className="text-xs text-gray-600 block mb-2">
+          Giá tối đa
+        </label>
+        <input
+          type="range"
+          min="0"
+          max={MAX_PRICE}
+          step="1000"
+          value={maxPrice}
+          onChange={handleMaxPriceSlider}
+          className="w-full accent-red-500 cursor-pointer"
+        />
+      </div>
+    </div>
+  </aside>
   );
 }

@@ -2,27 +2,36 @@ import CategorySlider from "@/components/CategorySlider";
 import Hero from "@/components/Hero";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import RecommendSection from "@/components/RecommendSection";
+import FeaturedCategories from "@/components/FeaturedCategories";
 
 export default function Page() {
   return (
-    <main>
+    <main className="scroll-smooth">
       <Header />
       <Hero />
 
-      <RecommendSection />
+      {/* Featured categories grid to give users quick access */}
+      <FeaturedCategories />
 
       {/* <CategorySection /> */}
-      <CategorySlider title="Thời trang nam" categorySlug="nam" />
+      <div id="category-nam" className="scroll-mt-24">
+        <CategorySlider title="Thời trang nam" categorySlug="nam" />
+      </div>
 
-      <CategorySlider title="Thời trang nữ" categorySlug="nu" />
+      <div id="category-nu" className="scroll-mt-24">
+        <CategorySlider title="Thời trang nữ" categorySlug="nu" />
+      </div>
 
-      <CategorySlider title="Trẻ em" categorySlug="tre-em" />
+      <div id="category-tre-em" className="scroll-mt-24">
+        <CategorySlider title="Trẻ em" categorySlug="tre-em" />
+      </div>
 
-      <CategorySlider
-        title="Sản phẩm nổi bật"
-        categorySlug="san-pham-noi-bat"
-      />
+      <div id="category-san-pham-noi-bat" className="scroll-mt-24">
+        <CategorySlider
+          title="Sản phẩm nổi bật"
+          categorySlug="san-pham-noi-bat"
+        />
+      </div>
       <Footer />
     </main>
   );

@@ -85,67 +85,71 @@ export default function CategorySlider({
     <section className="container mx-auto mt-16 px-4">
       {/* HEADER */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl md:text-3xl font-bold bg-red-500 text-white py-3 px-5 rounded-lg">
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
           {title}
         </h2>
-
-        <div className="flex gap-2">
-          <button
-            onClick={() => setPage((p) => Math.max(p - 1, 0))}
-            disabled={page === 0}
-            className="p-2 rounded-full border border-red-500 text-red-500
-              hover:bg-red-500 hover:text-white disabled:opacity-40"
-          >
-            <ChevronLeft />
-          </button>
-
-          <button
-            onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
-            disabled={page === totalPages - 1}
-            className="p-2 rounded-full border border-red-500 text-red-500
-              hover:bg-red-500 hover:text-white disabled:opacity-40"
-          >
-            <ChevronRight />
-          </button>
-        </div>
       </div>
 
-      {/* SLIDER */}
-      <div className="overflow-hidden">
+      <div className="relative">
+        {/* SLIDER */}
         {loading ? (
           <div className="text-center py-10 text-gray-500">Đang tải...</div>
         ) : (
-          <div
-            className="flex transition-transform duration-500"
-            style={{ transform: `translateX(-${page * 100}%)` }}
-          >
-            {Array.from({ length: totalPages }).map((_, i) => (
-              <div
-                key={i}
-                className="grid grid-cols-2 md:grid-cols-4 gap-6 min-w-full"
-              >
-                {products
-                  .slice(
-                    i * PRODUCTS_PER_PAGE,
-                    i * PRODUCTS_PER_PAGE + PRODUCTS_PER_PAGE
-                  )
-                  .map((product: any) => (
-                    <ProductCard
-                      key={product._id || product.id}
-                      product={{
-                        id: product._id || product.id,
-                        name: product.name,
-                        price: product.price,
-                        rating: typeof product.averageRating === 'number' ? product.averageRating : (product.rating || 0),
-                        image:
-                          product.images?.[0] ||
-                          "https://via.placeholder.com/300",
-                      }}
-                    />
-                  ))}
-              </div>
-            ))}
+          <div className="overflow-hidden">
+            <div
+              className="flex transition-transform duration-500"
+              style={{ transform: `translateX(-${page * 100}%)` }}
+            >
+              {Array.from({ length: totalPages }).map((_, i) => (
+                <div
+                  key={i}
+                  className="grid grid-cols-2 md:grid-cols-4 gap-6 min-w-full"
+                >
+                  {products
+                    .slice(
+                      i * PRODUCTS_PER_PAGE,
+                      i * PRODUCTS_PER_PAGE + PRODUCTS_PER_PAGE
+                    )
+                    .map((product: any) => (
+                      <ProductCard
+                        key={product._id || product.id}
+                        product={{
+                          id: product._id || product.id,
+                          name: product.name,
+                          price: product.price,
+                          rating: typeof product.averageRating === 'number' ? product.averageRating : (product.rating || 0),
+                          image:
+                            product.images?.[0] ||
+                            "https://via.placeholder.com/300",
+                        }}
+                      />
+                    ))}
+                </div>
+              ))}
+            </div>
           </div>
+        )}
+
+        {/* navigation arrows overlay */}
+        {totalPages > 1 && (
+          <>
+            <button
+              onClick={() => setPage((p) => Math.max(p - 1, 0))}
+              disabled={page === 0}
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 p-2 rounded-full bg-white shadow-lg
+                hover:bg-red-500 hover:text-white disabled:opacity-40 z-10"
+            >
+              <ChevronLeft />
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
+              disabled={page === totalPages - 1}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 rounded-full bg-white shadow-lg
+                hover:bg-red-500 hover:text-white disabled:opacity-40 z-10"
+            >
+              <ChevronRight />
+            </button>
+          </>
         )}
       </div>
 

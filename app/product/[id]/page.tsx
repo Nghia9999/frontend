@@ -6,10 +6,8 @@ import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import productService from "@/services/product.service";
 import categoryService from "@/services/category.service";
-import { useTracking } from "@/hooks/useTracking";
 import authService from "@/services/auth.service";
-import { cartService } from "@/services/cart.service";
-import ProductRecommendations from "@/components/ProductRecommendations";
+import { useCart } from "@/hooks/useCart";
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -19,14 +17,13 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [selectedColor, setSelectedColor] = useState<string>('');
+  const [success, setSuccess] = useState(false);
 
   const currentUser = authService.getCurrentUser();
   const userId = currentUser?.userId;
+  const { addToCart } = useCart();
 
-  const { trackView, trackAddToCart } = useTracking({
-    userId,
-    autoTrack: false
-  });
+  
 
   useEffect(() => {
     (async () => {
@@ -34,8 +31,6 @@ export default function ProductDetailPage() {
         const res = await productService.getOne(params.id as string);
         setProduct(res);
         
-        // Track product view
-        trackView(params.id as string, res.category);
         
         // Fetch category name if category exists
         if (res.category) {
@@ -52,7 +47,7 @@ export default function ProductDetailPage() {
         setLoading(false);
       }
     })();
-  }, [params.id, trackView]);
+  }, );
 
   const handleAddToCart = async () => {
     // Validate size and color selection if they exist
@@ -66,9 +61,6 @@ export default function ProductDetailPage() {
     }
 
     try {
-      // Track add to cart
-      trackAddToCart(product._id || product.id, quantity, product.category);
-
       const cartItem = {
         productId: product._id || product.id,
         name: product.name,
@@ -79,9 +71,15 @@ export default function ProductDetailPage() {
         color: selectedColor,
       };
 
-      // Add to database using cartService
-      await cartService.addToCart(cartItem);
-      alert('Đã thêm vào giỏ hàng!');
+      // Add to cart using real-time hook
+      await addToCart(cartItem);
+      
+      // Show success message
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+      
+      // Reset quantity
+      setQuantity(1);
     } catch (error) {
       console.error('Add to cart error:', error);
       alert('Có lỗi xảy ra khi thêm vào giỏ hàng!');
@@ -257,6 +255,12 @@ export default function ProductDetailPage() {
               <button className="w-full border-2 border-red-500 text-red-500 py-2.5 rounded-lg font-semibold hover:bg-red-50 transition text-sm">
                 Mua ngay
               </button>
+              
+              {success && (
+                <div className="w-full bg-green-100 text-green-700 py-2.5 rounded-lg font-semibold text-sm animate-pulse">
+                  ✓ Đã thêm vào giỏ hàng!
+                </div>
+              )}
             </div>
 
             <div className="border-t pt-4">
@@ -275,31 +279,9 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
+        {/* recommendation section removed */}
         <div className="mt-10 space-y-6">
-          {userId && (
-            <ProductRecommendations
-              userId={userId}
-              type="collaborative"
-              limit={10}
-              title="Gợi ý cho bạn"
-            />
-          )}
-
-          {userId && (
-            <ProductRecommendations
-              userId={userId}
-              type="content_based"
-              limit={10}
-              title="Sản phẩm bạn có thể thích"
-            />
-          )}
-
-          <ProductRecommendations
-            productId={product._id || product.id}
-            type="similar"
-            limit={10}
-            title="Sản phẩm tương tự"
-          />
+          {/* recommendations disabled */}
         </div>
 
       </div>

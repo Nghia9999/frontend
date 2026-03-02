@@ -3,9 +3,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, Minus, Plus } from "lucide-react";
-import Image from "next/image";
 import productService from "@/services/product.service";
-import { cartService } from "@/services/cart.service";
+import { useCart } from "@/hooks/useCart";
 
 type ProductDetail = {
   _id?: string;
@@ -33,6 +32,7 @@ export default function AddToCartModal({ open, productId, onClose, onAdded }: Pr
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const { addToCart } = useCart();
 
   useEffect(() => {
     setMounted(true);
@@ -119,7 +119,7 @@ export default function AddToCartModal({ open, productId, onClose, onAdded }: Pr
     try {
       setSubmitting(true);
       setError(null);
-      await cartService.addToCart({
+      await addToCart({
         productId,
         name: product.name || "",
         price: Number(product.price || 0),
@@ -162,13 +162,11 @@ export default function AddToCartModal({ open, productId, onClose, onAdded }: Pr
                 <div className="flex gap-4">
                   <div className="w-24 h-24 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0">
                     {imageUrl ? (
-                      <Image
+                      <img
                         src={imageUrl}
                         alt={product.name || "product"}
-                        width={96}
-                        height={96}
                         className="w-full h-full object-cover"
-                        unoptimized
+                        data-product-modal-image="true"
                       />
                     ) : (
                       <div className="w-full h-full" />

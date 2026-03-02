@@ -22,7 +22,7 @@ type Props = {
 export default function ProductCard({ product, showAddToCart = true }: Props) {
   const [openModal, setOpenModal] = useState(false);
 
-  const ratingValue = typeof product.rating === 'number' ? product.rating : 4.5;
+  const ratingValue = typeof product.rating === 'number' && Number.isFinite(product.rating) ? product.rating : null;
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -36,7 +36,7 @@ export default function ProductCard({ product, showAddToCart = true }: Props) {
         open={openModal}
         productId={String(product.id)}
         onClose={() => setOpenModal(false)}
-        onAdded={() => alert(`Đã thêm ${product.name} vào giỏ hàng!`)}
+        onAdded={() => setOpenModal(false)}
       />
 
       <div className="group bg-white rounded-2xl shadow hover:shadow-xl transition overflow-hidden">
@@ -56,7 +56,7 @@ export default function ProductCard({ product, showAddToCart = true }: Props) {
             className="absolute inset-0 flex items-center justify-center
             bg-black/50 opacity-0 group-hover:opacity-100 transition"
           >
-            <span className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-xl">
+            <span className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-xl cursor-pointer">
               <ShoppingCart size={18} />
               Thêm vào giỏ
             </span>
@@ -77,10 +77,8 @@ export default function ProductCard({ product, showAddToCart = true }: Props) {
             {product.price.toLocaleString("vi-VN")}đ
           </span>
 
-          <span className="flex items-center text-sm text-yellow-500">
-            <Star size={16} className="fill-yellow-400 mr-1" />
-            {Number.isFinite(ratingValue) ? ratingValue.toFixed(1) : '0.0'}
-          </span>
+          
+          
         </div>
       </div>
       </div>

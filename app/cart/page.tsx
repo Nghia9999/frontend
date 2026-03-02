@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Trash2, Plus, Minus } from "lucide-react";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
-import { cartService } from "@/services/cart.service";
+import { useCart } from "@/hooks/useCart";
 
  const toNumber = (value: unknown, fallback = 0) => {
    const n = typeof value === "number" ? value : Number(value);
@@ -19,44 +19,8 @@ import { cartService } from "@/services/cart.service";
  };
 
 export default function CartPage() {
-  const [cart, setCart] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { cartItems: cart, loading, updateQuantity, removeFromCart, clearCart } = useCart();
 
-  useEffect(() => {
-    const loadCart = async () => {
-      try {
-        const cartItems = await cartService.getCartItems();
-        setCart(cartItems);
-      } catch (err) {
-        setError("Không thể tải giỏ hàng");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadCart();
-  }, []);
-
-  const updateQuantity = async (id: string, delta: number) => {
-    const item = cart.find(i => i._id === id);
-    if (!item) return;
-
-    const newQuantity = Math.max(1, item.quantity + delta);
-    await cartService.updateQuantity(id, newQuantity);
-
-    setCart(prev =>
-      prev.map(i =>
-        i._id === id ? { ...i, quantity: newQuantity } : i
-      )
-    );
-  };
-
-  const removeItem = async (id: string) => {
-    await cartService.removeFromCart(id);
-    setCart(prev => prev.filter(i => i._id !== id));
-  };
 
   const totalPrice = cart.reduce((sum, item) => {
     const price = toNumber(item?.price, 0);
@@ -71,19 +35,6 @@ export default function CartPage() {
         <Header />
         <div className="min-h-screen flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500" />
-        </div>
-        <Footer />
-      </main>
-    );
-  }
-
-  // ❌ Error
-  if (error) {
-    return (
-      <main>
-        <Header />
-        <div className="min-h-screen flex items-center justify-center text-red-500">
-          {error}
         </div>
         <Footer />
       </main>
@@ -167,7 +118,7 @@ export default function CartPage() {
                           </div>
 
                           <button
-                            onClick={() => removeItem(item._id)}
+                            onClick={() => removeFromCart(item._id)}
                             className="p-2 rounded-xl hover:bg-red-50 text-red-600"
                             aria-label="Remove"
                           >
@@ -178,7 +129,7 @@ export default function CartPage() {
                         <div className="flex items-center justify-between gap-3 mt-4">
                           <div className="inline-flex items-center gap-2 rounded-xl border border-gray-200 p-1">
                             <button
-                              onClick={() => updateQuantity(item._id, -1)}
+                              onClick={() => handleUpdateQuantity(item._id, -1)}
                               className="w-9 h-9 rounded-lg hover:bg-gray-100 flex items-center justify-center"
                               aria-label="Decrease"
                             >
@@ -188,7 +139,7 @@ export default function CartPage() {
                               {quantity}
                             </div>
                             <button
-                              onClick={() => updateQuantity(item._id, 1)}
+                              onClick={() => handleUpdateQuantity(item._id, 1)}
                               className="w-9 h-9 rounded-lg hover:bg-gray-100 flex items-center justify-center"
                               aria-label="Increase"
                             >
@@ -241,8 +192,9 @@ export default function CartPage() {
                   type="button"
                   className="mt-3 w-full border border-gray-200 py-3 rounded-xl font-semibold hover:bg-gray-50"
                   onClick={async () => {
-                    await cartService.clearCart();
-                    setCart([]);
+                    if (window.confirm("Bạn chắc chắn muốn xóa giỏ hàng?")) {
+                      await clearCart();
+                    }
                   }}
                 >
                   Xóa giỏ hàng
