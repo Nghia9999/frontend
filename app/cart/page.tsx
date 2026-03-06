@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Trash2, Plus, Minus } from "lucide-react";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
@@ -19,6 +20,7 @@ import { useCart } from "@/hooks/useCart";
  };
 
 export default function CartPage() {
+  const router = useRouter();
   const { cartItems: cart, loading, updateQuantity, removeFromCart, clearCart } = useCart();
 
   const handleUpdateQuantity = (itemId: string, delta: number) => {
@@ -190,7 +192,7 @@ export default function CartPage() {
                 <button
                   type="button"
                   className="mt-5 w-full bg-red-500 text-white py-3 rounded-xl font-semibold hover:bg-red-600"
-                  onClick={() => alert("Chưa tích hợp trang thanh toán")}
+                  onClick={() => router.push("/checkout")}
                 >
                   Thanh toán
                 </button>

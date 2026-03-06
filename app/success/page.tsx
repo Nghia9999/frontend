@@ -4,6 +4,8 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import api from "@/services/api";
+import { cartService } from "@/services/cart.service";
 
 function SuccessPageContent() {
   const searchParams = useSearchParams();
@@ -12,11 +14,36 @@ function SuccessPageContent() {
 
   useEffect(() => {
     const sessionId = searchParams.get('session_id');
-    if (sessionId) {
-      // TODO: Verify session with Stripe and create order in database
-      // For now, just show success message
-      setLoading(false);
-    }
+    let cancelled = false;
+
+    const run = async () => {
+      try {
+        // Clear server cart after redirect (webhook also clears; this is best-effort).
+        await cartService.clearCart();
+        window.dispatchEvent(new Event('cart:update'));
+
+        if (sessionId) {
+          // Fallback for local dev: confirm session on backend (webhook may not be running)
+          try {
+            await api.post('/payment/confirm-checkout-session', { sessionId });
+          } catch (e) {
+            // ignore: webhook may have already processed, or session is not paid yet
+          }
+
+          const { data } = await api.get(`/payment/checkout-session/${sessionId}`);
+          if (!cancelled) setOrderInfo(data);
+        }
+      } catch (e) {
+        // ignore: still show success UI
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    run();
+    return () => {
+      cancelled = true;
+    };
   }, [searchParams]);
 
   if (loading) {
@@ -53,6 +80,18 @@ function SuccessPageContent() {
           <p className="text-gray-600 mb-8">
             Cảm ơn bạn đã đặt hàng. Chúng tôi sẽ liên hệ với bạn sớm nhất để xác nhận đơn hàng.
           </p>
+
+          {orderInfo?.orderNumber && (
+            <div className="mb-8 p-4 bg-white border rounded-lg">
+              <div className="text-sm text-gray-600">Mã đơn hàng</div>
+              <div className="text-xl font-bold">{orderInfo.orderNumber}</div>
+              {orderInfo?.paymentStatus && (
+                <div className="text-sm text-gray-600 mt-1">
+                  Trạng thái thanh toán: <span className="font-medium">{orderInfo.paymentStatus}</span>
+                </div>
+              )}
+            </div>
+          )}
           
           <div className="space-y-4">
             <button

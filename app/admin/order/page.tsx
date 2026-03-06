@@ -15,7 +15,7 @@ export default function OrderAdminPage() {
 
   const fetchOrders = async () => {
     try {
-      const data = await orderService.getAll();
+      const data = await orderService.getAllAdmin();
       setOrders(data || []);
     } catch (error) {
       console.error('Error fetching orders:', error);

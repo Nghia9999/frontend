@@ -22,7 +22,7 @@ export function useCart() {
     }
   }, []);
 
-  // Listen for cart updates from other components
+  
   useEffect(() => {
     fetchCart();
 
@@ -36,7 +36,6 @@ export function useCart() {
     };
   }, [fetchCart]);
 
-  // Add item to cart
   const addToCart = useCallback(
     async (item: {
       productId: string;
@@ -58,7 +57,6 @@ export function useCart() {
     []
   );
 
-  // Update quantity
   const updateQuantity = useCallback(async (itemId: string, quantity: number) => {
     try {
       await cartService.updateQuantity(itemId, quantity);
@@ -69,7 +67,6 @@ export function useCart() {
     }
   }, []);
 
-  // Remove from cart
   const removeFromCart = useCallback(async (itemId: string) => {
     try {
       await cartService.removeFromCart(itemId);
