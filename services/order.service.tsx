@@ -55,6 +55,11 @@ export const orderService = {
     const res = await api.delete(`/orders/${id}`);
     return res.data;
   },
+
+  async cancel(id: string) {
+    const res = await api.post(`/orders/${id}/cancel`);
+    return res.data;
+  },
 };
 
 export default orderService;

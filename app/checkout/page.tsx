@@ -1,11 +1,14 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useCart } from '@/hooks/useCart';
 import api from '@/services/api';
+import authService from '@/services/auth.service';
+import orderService from '@/services/order.service';
+import { cartService } from '@/services/cart.service';
 
 interface CheckoutFormData {
   name: string;
@@ -21,8 +24,16 @@ export default function CheckoutPage() {
   const { cartItems: cart } = useCart();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    if (!authService.getCurrentUser().isAuthenticated) {
+      router.replace('/login?returnUrl=/checkout');
+      return;
+    }
+    setAuthChecked(true);
+  }, [router]);
 
   const [formData, setFormData] = useState<CheckoutFormData>({
     name: '',
@@ -32,6 +43,8 @@ export default function CheckoutPage() {
     city: '',
     postalCode: '',
   });
+  type PaymentMethod = 'card' | 'cod';
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
 
   const totalPrice = cart.reduce((sum, item) => {
     const price = typeof item?.price === 'number' ? item.price : 0;
@@ -52,7 +65,6 @@ export default function CheckoutPage() {
     setError(null);
 
     try {
-      // Validate form
       if (
         !formData.name ||
         !formData.email ||
@@ -65,10 +77,30 @@ export default function CheckoutPage() {
         return;
       }
 
-      // Gọi backend tạo Stripe Checkout Session
+      if (paymentMethod === 'cod') {
+        await orderService.create({
+          items: cart.map((item) => ({
+            id: item.productId || item._id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            image: item.image || '',
+            size: item.size,
+            color: item.color,
+          })),
+          customerInfo: formData,
+          totalAmount: totalPrice,
+          status: 'pending',
+        });
+        await cartService.clearCart();
+        if (typeof window !== 'undefined') window.dispatchEvent(new Event('cart:update'));
+        router.push('/orders?cod=1');
+        return;
+      }
+
       const checkoutResponse = await api.post('/payment/create-checkout-session', {
         currency: 'vnd',
-        items: cart.map(item => ({
+        items: cart.map((item) => ({
           id: item._id,
           productId: item.productId || item._id,
           name: item.name,
@@ -82,7 +114,6 @@ export default function CheckoutPage() {
       });
 
       if (checkoutResponse.data.url) {
-        // Redirect to Stripe checkout
         window.location.href = checkoutResponse.data.url;
       } else {
         setError('Không thể khởi tạo phiên thanh toán');
@@ -91,13 +122,25 @@ export default function CheckoutPage() {
       console.error('Checkout error:', err);
       setError(
         err.response?.data?.message ||
-        err.message ||
-        'Lỗi khi xử lý thanh toán'
+          err.message ||
+          'Lỗi khi xử lý thanh toán'
       );
     } finally {
       setLoading(false);
     }
   };
+
+  if (!authChecked) {
+    return (
+      <main>
+        <Header />
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500" />
+        </div>
+        <Footer />
+      </main>
+    );
+  }
 
   if (cart.length === 0) {
     return (
@@ -214,12 +257,42 @@ export default function CheckoutPage() {
                   </div>
                 </div>
 
+                <div className="mt-6">
+                  <h3 className="text-sm font-medium mb-3">Hình thức thanh toán</h3>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        checked={paymentMethod === 'card'}
+                        onChange={() => setPaymentMethod('card')}
+                        className="text-red-500"
+                      />
+                      <span>Thanh toán bằng thẻ (Stripe)</span>
+                    </label>
+                    <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        checked={paymentMethod === 'cod'}
+                        onChange={() => setPaymentMethod('cod')}
+                        className="text-red-500"
+                      />
+                      <span>Thanh toán khi nhận hàng (COD)</span>
+                    </label>
+                  </div>
+                </div>
+
                 <button
                   type="submit"
                   disabled={loading}
                   className="w-full bg-red-500 text-white font-bold py-3 rounded-lg hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed mt-6"
                 >
-                  {loading ? 'Đang xử lý...' : `Thanh Toán ${totalPrice.toLocaleString('vi-VN')}đ`}
+                  {loading
+                    ? 'Đang xử lý...'
+                    : paymentMethod === 'cod'
+                      ? `Đặt hàng (thanh toán khi nhận) ${totalPrice.toLocaleString('vi-VN')}đ`
+                      : `Thanh Toán ${totalPrice.toLocaleString('vi-VN')}đ`}
                 </button>
               </form>
             </div>

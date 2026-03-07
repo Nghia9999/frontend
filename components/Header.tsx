@@ -121,6 +121,13 @@ export default function Header() {
 
             {showProfile && (
               <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg z-50">
+                <Link
+                  href="/orders"
+                  onClick={() => setShowProfile(false)}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-500 hover:text-white rounded-t-lg"
+                >
+                  Đơn hàng của tôi
+                </Link>
                 <button
                   onClick={async () => {
                     await authService.logout();
@@ -129,7 +136,7 @@ export default function Header() {
                   }}
                   className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-500 hover:text-white rounded-b-lg"
                 >
-                  Logout
+                  Đăng xuất
                 </button>
               </div>
             )}

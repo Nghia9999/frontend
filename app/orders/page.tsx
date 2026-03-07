@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import authService from "@/services/auth.service";
+import orderService from "@/services/order.service";
+import api from "@/services/api";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -36,9 +38,11 @@ interface Order {
 
 export default function OrdersPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const codSuccess = searchParams.get("cod") === "1";
 
   // Kiểm tra authentication
   useEffect(() => {
@@ -52,25 +56,45 @@ export default function OrdersPage() {
 
   const fetchOrders = async () => {
     try {
-      // TODO: Update with actual API endpoint
-      const response = await fetch('http://localhost:4000/orders', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setOrders(data);
-      } else {
-        throw new Error('Failed to fetch orders');
-      }
+      const data = await orderService.getAll();
+      setOrders(data);
     } catch (err) {
       setError('Không thể tải danh sách đơn hàng');
       console.error('Orders fetch error:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCancelOrder = async (orderId: string) => {
+    if (!confirm('Bạn có chắc muốn hủy đơn hàng này?')) return;
+    try {
+      await orderService.cancel(orderId);
+      setOrders((prev) =>
+        prev.map((o) =>
+          o._id === orderId ? { ...o, status: 'cancelled' as const } : o
+        )
+      );
+    } catch (err) {
+      console.error('Cancel order error:', err);
+      alert('Không thể hủy đơn hàng');
+    }
+  };
+
+  const handlePayOrder = async (orderId: string) => {
+    try {
+      const { data } = await api.post('/payment/create-checkout-session', {
+        orderId,
+        currency: 'vnd',
+      });
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        alert('Không thể chuyển đến trang thanh toán');
+      }
+    } catch (err: any) {
+      console.error('Pay order error:', err);
+      alert(err.response?.data?.message || 'Không thể tạo phiên thanh toán');
     }
   };
 
@@ -123,6 +147,12 @@ export default function OrdersPage() {
       
       <div className="max-w-6xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">Đơn hàng của bạn</h1>
+
+        {codSuccess && (
+          <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-6">
+            Đặt hàng thành công. Bạn sẽ thanh toán khi nhận hàng.
+          </div>
+        )}
         
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6">
@@ -228,7 +258,15 @@ export default function OrdersPage() {
                     Cập nhật lần cuối: {new Date(order.updatedAt).toLocaleDateString('vi-VN')}
                   </p>
                   
-                  <div className="space-x-2">
+                  <div className="space-x-2 flex flex-wrap gap-2">
+                    {order.status === 'pending' && order.paymentStatus === 'pending' && (
+                      <button
+                        onClick={() => handlePayOrder(order._id)}
+                        className="px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600"
+                      >
+                        Thanh toán
+                      </button>
+                    )}
                     {order.status === 'pending' && (
                       <button
                         onClick={() => handleCancelOrder(order._id)}
@@ -240,9 +278,9 @@ export default function OrdersPage() {
                     
                     <Link
                       href={`/orders/${order._id}`}
-                      className="px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600"
+                      className="px-4 py-2 text-sm bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200"
                     >
-                      Xem chi tiết
+                      Chi tiết
                     </Link>
                   </div>
                 </div>
@@ -257,27 +295,3 @@ export default function OrdersPage() {
   );
 }
 
-// TODO: Implement cancel order function
-const handleCancelOrder = async (orderId: string) => {
-  if (!confirm('Bạn có chắc muốn hủy đơn hàng này?')) return;
-  
-  try {
-    const response = await fetch(`http://localhost:4000/orders/${orderId}/cancel`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    if (response.ok) {
-      alert('Đơn hàng đã được hủy');
-      window.location.reload();
-    } else {
-      alert('Không thể hủy đơn hàng');
-    }
-  } catch (error) {
-    console.error('Cancel order error:', error);
-    alert('Có lỗi xảy ra khi hủy đơn hàng');
-  }
-};

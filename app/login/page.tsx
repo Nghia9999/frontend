@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 import authService from "@/services/auth.service";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams.get("returnUrl") || "/";
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [loading, setLoading] = React.useState(false);
@@ -22,7 +24,7 @@ export default function LoginPage() {
       if (user?.role === "admin") {
         router.push("/admin");
       } else {
-        router.push("/");
+        router.push(returnUrl);
       }
     } catch (err: any) {
       setError(
