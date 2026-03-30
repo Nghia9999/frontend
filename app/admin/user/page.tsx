@@ -94,7 +94,7 @@ export default function UsersAdminPage() {
     }
     try {
       await userService.updateUser(user._id, {
-        role: "admin", // Only upgrade to admin, never downgrade
+        role: "admin",
       });
       fetchUsers();
     } catch (error) {

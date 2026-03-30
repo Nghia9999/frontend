@@ -23,6 +23,7 @@ export type OrderDto = {
   totalAmount: number;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   stripeSessionId?: string;
+  createdAt?: string;
 };
 
 export const orderService = {
