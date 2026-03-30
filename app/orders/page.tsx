@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import authService from "@/services/auth.service";
@@ -36,13 +36,11 @@ interface Order {
   updatedAt: string;
 }
 
-export default function OrdersPage() {
+function OrdersContent({ codSuccess }: { codSuccess: boolean }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const codSuccess = searchParams.get("cod") === "1";
 
   // Kiểm tra authentication
   useEffect(() => {
@@ -295,3 +293,17 @@ export default function OrdersPage() {
   );
 }
 
+function OrdersWrapper() {
+  const searchParams = useSearchParams();
+  const codSuccess = searchParams.get("cod") === "1";
+  
+  return <OrdersContent codSuccess={codSuccess} />;
+}
+
+export default function OrdersPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <OrdersWrapper />
+    </Suspense>
+  );
+}

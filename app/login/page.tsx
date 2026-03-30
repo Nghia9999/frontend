@@ -2,13 +2,11 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import React from "react";
+import React, { Suspense } from "react";
 import authService from "@/services/auth.service";
 
-export default function LoginPage() {
+function LoginForm({ returnUrl }: { returnUrl: string }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const returnUrl = searchParams.get("returnUrl") || "/";
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [loading, setLoading] = React.useState(false);
@@ -90,5 +88,20 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function LoginWrapper() {
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams.get("returnUrl") || "/";
+
+  return <LoginForm returnUrl={returnUrl} />;
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginWrapper />
+    </Suspense>
   );
 }
